@@ -1,0 +1,7 @@
+.login-card {
+  position: relative;
+}
+
+.login-card::before {
+  content: none;
+}
