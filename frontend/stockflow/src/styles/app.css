@@ -163,6 +163,12 @@
   gap: 20px;
 }
 
+.product-form-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -394,6 +400,7 @@ textarea {
 
   .grid-2,
   .grid-3,
+  .product-form-split,
   .stat-grid {
     grid-template-columns: 1fr;
   }

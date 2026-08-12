@@ -126,7 +126,7 @@ const Products = () => {
               <span>SKU</span>
               <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
             </label>
-            <div className="grid-2 compact">
+            <div className="product-form-split compact">
               <label className="field">
                 <span>Quantity</span>
                 <input
