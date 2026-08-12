@@ -23,8 +23,8 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: var(--accent-blue-soft);
-  color: var(--accent-blue);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
   font-weight: 700;
   width: fit-content;
 }
@@ -48,8 +48,8 @@
 .persona-card {
   padding: 16px;
   border-radius: 18px;
-  background: var(--accent-blue-soft);
-  border: 1px solid #c8d7ea;
+  background: #fffaf5;
+  border: 1px solid #fed7aa;
 }
 
 .nav-link {
@@ -61,8 +61,8 @@
 
 .nav-link:hover,
 .nav-link.active {
-  background: var(--accent-blue-soft);
-  color: var(--accent-blue);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
   transform: translateX(2px);
 }
 
@@ -98,11 +98,7 @@
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
-}
-
-.user-chip-role {
-  font-weight: 700;
-  color: var(--accent-blue);
+  box-shadow: var(--shadow);
 }
 
 .stack {
@@ -122,6 +118,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .panel {
@@ -148,8 +145,7 @@
 }
 
 .stat-card.accent {
-  background: var(--accent-green-soft);
-  border-color: #cde2d3;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
 }
 
 .stat-label {
@@ -209,7 +205,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--accent-blue);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.14);
 }
 
 textarea {
@@ -240,12 +237,12 @@ textarea {
 }
 
 .button-secondary {
-  background: var(--accent-blue-soft);
-  color: var(--accent-blue);
+  background: #f3f4f6;
+  color: var(--text);
 }
 
 .button-secondary:hover {
-  background: #dce7f5;
+  background: #e5e7eb;
 }
 
 .actions,
@@ -302,13 +299,13 @@ textarea {
   background: none;
   border: 0;
   padding: 0;
-  color: var(--accent-blue);
+  color: var(--accent-dark);
   cursor: pointer;
   font-weight: 700;
 }
 
 .link-button.danger {
-  color: var(--accent-dark);
+  color: #b91c1c;
 }
 
 .error-banner,
@@ -319,15 +316,15 @@ textarea {
 }
 
 .error-banner {
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  border: 1px solid #f4c6a6;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .success-banner {
-  background: var(--accent-green-soft);
-  color: var(--accent-green);
-  border: 1px solid #cde2d3;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
 }
 
 .login-page {
@@ -339,9 +336,11 @@ textarea {
 
 .login-card {
   width: min(100%, 520px);
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 28px;
+  box-shadow: var(--shadow);
   padding: 32px;
 }
 
@@ -372,7 +371,7 @@ textarea {
 }
 
 .auth-switch a {
-  color: var(--accent-blue);
+  color: var(--accent-dark);
   font-weight: 700;
 }
 

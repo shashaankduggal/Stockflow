@@ -8,6 +8,7 @@ import { getToken } from "../services/api";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import AccessDeniedPage from "../pages/auth/AccessDeniedPage";
+import RoleControl from "../pages/admin/RoleControl";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Products from "../pages/products/Products";
 import Warehouses from "../pages/warehouses/Warehouses";
@@ -36,6 +37,7 @@ const AppRoutes = () => {
 
             <Route element={<ProtectedRoutes allowedRoles={[ROLES.ADMIN]} />}>
               <Route path="/admin/dashboard" element={<Dashboard />} />
+              <Route path="/admin/roles" element={<RoleControl />} />
             </Route>
 
             <Route element={<ProtectedRoutes allowedRoles={[ROLES.MANAGER]} />}>

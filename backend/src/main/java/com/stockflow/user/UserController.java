@@ -1,6 +1,9 @@
 package com.stockflow.user;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +23,23 @@ public class UserController {
 
     }
 
-    
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @PutMapping("/{id}/role")
+    public User updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UserRoleUpdateRequest request) {
+
+        return userService.updateUserRole(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return "User deleted successfully";
+    }
 
 }
