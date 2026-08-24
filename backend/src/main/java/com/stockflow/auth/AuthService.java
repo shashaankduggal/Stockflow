@@ -2,6 +2,8 @@ package com.stockflow.auth;
 
 import com.stockflow.role.Role;
 import com.stockflow.role.RoleRepository;
+import com.stockflow.exception.BadRequestException;
+import com.stockflow.exception.UnauthorizedException;
 import com.stockflow.security.RoleName;
 import com.stockflow.user.User;
 import com.stockflow.user.UserRepository;
@@ -33,13 +35,13 @@ public class AuthService {
 
         User user = userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword())) {
 
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
         String authority = RoleName.normalizeAuthority(user.getRole() != null ? user.getRole().getName() : null);
@@ -58,7 +60,7 @@ public class AuthService {
         String email = request.getEmail().trim().toLowerCase();
 
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("An account with that email already exists");
+            throw new BadRequestException("An account with that email already exists");
         }
 
         Role role = roleRepository.findByName(RoleName.VIEWER.authority())

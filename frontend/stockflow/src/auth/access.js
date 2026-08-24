@@ -51,6 +51,7 @@ export const ACCESS_RULES = {
   inventory: [ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF, ROLES.VIEWER],
   inventoryMutate: [ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF],
   roleControl: [ROLES.ADMIN],
+  auditLogs: [ROLES.ADMIN, ROLES.MANAGER],
   suppliers: [ROLES.ADMIN, ROLES.MANAGER],
   supplierMutate: [ROLES.ADMIN, ROLES.MANAGER],
   supplierDelete: [ROLES.ADMIN],
@@ -65,6 +66,7 @@ export const NAV_ITEMS = [
   { to: "/warehouses", label: "Warehouses", accessKey: "warehouses" },
   { to: "/inventory", label: "Inventory", accessKey: "inventory" },
   { to: "/admin/roles", label: "Role Control", accessKey: "roleControl" },
+  { to: "/audit-logs", label: "Audit Logs", accessKey: "auditLogs" },
   { to: "/suppliers", label: "Suppliers", accessKey: "suppliers" },
   { to: "/categories", label: "Categories", accessKey: "categories" },
 ];

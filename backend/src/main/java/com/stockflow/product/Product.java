@@ -1,7 +1,6 @@
 package com.stockflow.product;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
@@ -21,10 +20,6 @@ public class Product {
     @Column(unique = true)
     private String sku;
 
-    @Min(value = 0, message = "Quantity cannot be negative")
-    @Column(nullable = false)
-    private Integer quantity;
-
     @Positive(message = "Price must be greater than zero")
     @Column(nullable = false)
     private Double price;
@@ -32,11 +27,10 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String name, String sku, Integer quantity, Double price) {
+    public Product(Long id, String name, String sku, Double price) {
         this.id = id;
         this.name = name;
         this.sku = sku;
-        this.quantity = quantity;
         this.price = price;
     }
 
@@ -62,14 +56,6 @@ public class Product {
 
     public void setSku(String sku) {
         this.sku = sku;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public Double getPrice() {

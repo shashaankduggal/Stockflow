@@ -15,6 +15,7 @@ import Warehouses from "../pages/warehouses/Warehouses";
 import Inventory from "../pages/inventory/Inventory";
 import Suppliers from "../pages/suppliers/Suppliers";
 import Categories from "../pages/categories/Categories";
+import AuditLogs from "../pages/audit/AuditLogs";
 
 const AppFallback = () => {
   return getToken() ? <LandingRedirect /> : <Navigate to="/login" replace />;
@@ -64,6 +65,7 @@ const AppRoutes = () => {
             <Route element={<ProtectedRoutes allowedRoles={[ROLES.ADMIN, ROLES.MANAGER]} />}>
               <Route path="/suppliers" element={<Suppliers />} />
               <Route path="/categories" element={<Categories />} />
+              <Route path="/audit-logs" element={<AuditLogs />} />
             </Route>
           </Route>
         </Route>

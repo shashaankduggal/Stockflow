@@ -28,7 +28,8 @@ const Suppliers = () => {
   };
 
   useEffect(() => {
-    loadSuppliers();
+    const timer = window.setTimeout(loadSuppliers, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const submit = async (event) => {

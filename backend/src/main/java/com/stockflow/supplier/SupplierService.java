@@ -1,5 +1,6 @@
 package com.stockflow.supplier;
 
+import com.stockflow.exception.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class SupplierService {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Supplier getSupplier(Long id) {
         return supplierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supplier not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found"));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -44,7 +45,7 @@ public class SupplierService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteSupplier(Long id) {
         if (!supplierRepository.existsById(id)) {
-            throw new RuntimeException("Supplier not found");
+            throw new ResourceNotFoundException("Supplier not found");
         }
         supplierRepository.deleteById(id);
     }

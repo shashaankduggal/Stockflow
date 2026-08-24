@@ -38,7 +38,8 @@ const Inventory = () => {
   };
 
   useEffect(() => {
-    loadAll();
+    const timer = window.setTimeout(loadAll, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const productOptions = useMemo(

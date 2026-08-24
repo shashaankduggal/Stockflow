@@ -2,6 +2,8 @@ package com.stockflow.user;
 
 import com.stockflow.role.Role;
 import com.stockflow.role.RoleRepository;
+import com.stockflow.exception.BadRequestException;
+import com.stockflow.exception.ResourceNotFoundException;
 import com.stockflow.security.RoleName;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +27,7 @@ public class UserService {
 
     return userRepository
             .findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
     }
 
@@ -37,15 +39,15 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     public User updateUserRole(Long id, UserRoleUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (isCurrentUser(user)) {
-            throw new RuntimeException("You cannot change your own role");
+            throw new BadRequestException("You cannot change your own role");
         }
 
         String authority = parseRequestedAuthority(request.getRole());
         Role role = roleRepository.findByName(authority)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         user.setRole(role);
         return userRepository.save(user);
@@ -54,10 +56,10 @@ public class UserService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (isCurrentUser(user)) {
-            throw new RuntimeException("You cannot delete your own account");
+            throw new BadRequestException("You cannot delete your own account");
         }
 
         userRepository.delete(user);
@@ -73,7 +75,7 @@ public class UserService {
 
     private String parseRequestedAuthority(String rawRole) {
         if (rawRole == null || rawRole.isBlank()) {
-            throw new RuntimeException("Role is required");
+            throw new BadRequestException("Role is required");
         }
 
         String normalized = rawRole.trim().toUpperCase();
@@ -87,7 +89,7 @@ public class UserService {
             }
         }
 
-        throw new RuntimeException("Unsupported role: " + rawRole);
+        throw new BadRequestException("Unsupported role: " + rawRole);
     }
 
 }

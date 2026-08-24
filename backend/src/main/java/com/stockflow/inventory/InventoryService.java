@@ -2,8 +2,13 @@ package com.stockflow.inventory;
 
 import com.stockflow.product.Product;
 import com.stockflow.product.ProductRepository;
+import com.stockflow.audit.AuditLogService;
+import com.stockflow.exception.BadRequestException;
+import com.stockflow.exception.ResourceNotFoundException;
 import com.stockflow.warehouse.Warehouse;
 import com.stockflow.warehouse.WarehouseRepository;
+import com.stockflow.warehouse.WarehouseStock;
+import com.stockflow.warehouse.WarehouseStockRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,15 +21,21 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
+    private final WarehouseStockRepository warehouseStockRepository;
+    private final AuditLogService auditLogService;
 
     public InventoryService(
             InventoryRepository inventoryRepository,
             ProductRepository productRepository,
-            WarehouseRepository warehouseRepository) {
+            WarehouseRepository warehouseRepository,
+            WarehouseStockRepository warehouseStockRepository,
+            AuditLogService auditLogService) {
 
         this.inventoryRepository = inventoryRepository;
         this.productRepository = productRepository;
         this.warehouseRepository = warehouseRepository;
+        this.warehouseStockRepository = warehouseStockRepository;
+        this.auditLogService = auditLogService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
@@ -40,19 +51,16 @@ public class InventoryService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public Inventory stockIn(StockInRequest request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new RuntimeException("Warehouse not found"));
-
-        product.setQuantity(product.getQuantity() + request.getQuantity());
-        productRepository.saveAndFlush(product);
+        WarehouseStock warehouseStock = getWarehouseStock(request.getProductId(), request.getWarehouseId());
+        warehouseStock.setQuantity(warehouseStock.getQuantity() + request.getQuantity());
+        warehouseStockRepository.saveAndFlush(warehouseStock);
+        auditLogService.logInventoryAction("STOCK_IN", warehouseStock.getProduct(), null,
+            warehouseStock.getWarehouse(), request.getQuantity(), request.getRemarks());
 
         Inventory inventory = new Inventory();
 
-        inventory.setProduct(product);
-        inventory.setWarehouse(warehouse);
+        inventory.setProduct(warehouseStock.getProduct());
+        inventory.setWarehouse(warehouseStock.getWarehouse());
         inventory.setQuantity(request.getQuantity());
         inventory.setType("STOCK_IN");
         inventory.setRemarks(request.getRemarks());
@@ -63,23 +71,20 @@ public class InventoryService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public Inventory stockOut(StockInRequest request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new RuntimeException("Warehouse not found"));
-
-        if (product.getQuantity() < request.getQuantity()) {
-            throw new RuntimeException("Insufficient stock");
+        WarehouseStock warehouseStock = getWarehouseStock(request.getProductId(), request.getWarehouseId());
+        if (warehouseStock.getQuantity() < request.getQuantity()) {
+            throw new BadRequestException("Insufficient stock");
         }
 
-        product.setQuantity(product.getQuantity() - request.getQuantity());
-        productRepository.saveAndFlush(product);
+        warehouseStock.setQuantity(warehouseStock.getQuantity() - request.getQuantity());
+        warehouseStockRepository.saveAndFlush(warehouseStock);
+        auditLogService.logInventoryAction("STOCK_OUT", warehouseStock.getProduct(),
+            warehouseStock.getWarehouse(), null, request.getQuantity(), request.getRemarks());
 
         Inventory inventory = new Inventory();
 
-        inventory.setProduct(product);
-        inventory.setWarehouse(warehouse);
+        inventory.setProduct(warehouseStock.getProduct());
+        inventory.setWarehouse(warehouseStock.getWarehouse());
         inventory.setQuantity(request.getQuantity());
         inventory.setType("STOCK_OUT");
         inventory.setRemarks(request.getRemarks());
@@ -90,34 +95,33 @@ public class InventoryService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public List<Inventory> transferStock(StockTransferRequest request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        Warehouse fromWarehouse = warehouseRepository.findById(request.getFromWarehouseId())
-                .orElseThrow(() -> new RuntimeException("Source warehouse not found"));
-
-        Warehouse toWarehouse = warehouseRepository.findById(request.getToWarehouseId())
-                .orElseThrow(() -> new RuntimeException("Destination warehouse not found"));
-
         if (request.getFromWarehouseId().equals(request.getToWarehouseId())) {
-            throw new RuntimeException("Source and destination warehouses must be different");
+            throw new BadRequestException("Source and destination warehouses must be different");
         }
 
-        if (product.getQuantity() < request.getQuantity()) {
-            throw new RuntimeException("Insufficient stock");
+        WarehouseStock sourceStock = getWarehouseStock(request.getProductId(), request.getFromWarehouseId());
+        WarehouseStock destinationStock = getWarehouseStock(request.getProductId(), request.getToWarehouseId());
+        if (sourceStock.getQuantity() < request.getQuantity()) {
+            throw new BadRequestException("Insufficient stock");
         }
+
+        sourceStock.setQuantity(sourceStock.getQuantity() - request.getQuantity());
+        destinationStock.setQuantity(destinationStock.getQuantity() + request.getQuantity());
+        warehouseStockRepository.saveAll(List.of(sourceStock, destinationStock));
+        auditLogService.logInventoryAction("TRANSFER", sourceStock.getProduct(), sourceStock.getWarehouse(),
+            destinationStock.getWarehouse(), request.getQuantity(), request.getRemarks());
 
         Inventory outTransaction = new Inventory();
-        outTransaction.setProduct(product);
-        outTransaction.setWarehouse(fromWarehouse);
+        outTransaction.setProduct(sourceStock.getProduct());
+        outTransaction.setWarehouse(sourceStock.getWarehouse());
         outTransaction.setQuantity(request.getQuantity());
         outTransaction.setType("TRANSFER_OUT");
         outTransaction.setRemarks(request.getRemarks());
         inventoryRepository.saveAndFlush(outTransaction);
 
         Inventory inTransaction = new Inventory();
-        inTransaction.setProduct(product);
-        inTransaction.setWarehouse(toWarehouse);
+        inTransaction.setProduct(destinationStock.getProduct());
+        inTransaction.setWarehouse(destinationStock.getWarehouse());
         inTransaction.setQuantity(request.getQuantity());
         inTransaction.setType("TRANSFER_IN");
         inTransaction.setRemarks(request.getRemarks());
@@ -125,6 +129,17 @@ public class InventoryService {
         return List.of(
                 outTransaction,
                 inventoryRepository.saveAndFlush(inTransaction));
+    }
+
+    private WarehouseStock getWarehouseStock(Long productId, Long warehouseId) {
+        return warehouseStockRepository.findByProductIdAndWarehouseId(productId, warehouseId)
+                .orElseGet(() -> {
+                Product product = productRepository.findById(productId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+                Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
+                return warehouseStockRepository.save(new WarehouseStock(product, warehouse, 0));
+                });
     }
 
 }

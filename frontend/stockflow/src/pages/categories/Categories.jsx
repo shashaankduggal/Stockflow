@@ -28,7 +28,8 @@ const Categories = () => {
   };
 
   useEffect(() => {
-    loadCategories();
+    const timer = window.setTimeout(loadCategories, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const submit = async (event) => {

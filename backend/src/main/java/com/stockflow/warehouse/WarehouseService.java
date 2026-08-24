@@ -1,5 +1,6 @@
 package com.stockflow.warehouse;
 
+import com.stockflow.exception.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class WarehouseService {
         this.warehouseRepository = warehouseRepository;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public List<Warehouse> getAllWarehouses() {
         return warehouseRepository.findAll();
     }
@@ -24,10 +25,10 @@ public class WarehouseService {
         return warehouseRepository.save(warehouse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     public Warehouse getWarehouse(Long id) {
         return warehouseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Warehouse not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -41,7 +42,7 @@ public class WarehouseService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteWarehouse(Long id) {
         if (!warehouseRepository.existsById(id)) {
-            throw new RuntimeException("Warehouse not found");
+            throw new ResourceNotFoundException("Warehouse not found");
         }
         warehouseRepository.deleteById(id);
     }

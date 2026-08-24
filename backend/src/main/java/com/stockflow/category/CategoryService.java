@@ -1,5 +1,6 @@
 package com.stockflow.category;
 
+import com.stockflow.exception.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class CategoryService {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Category getCategory(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -41,7 +42,7 @@ public class CategoryService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Category not found");
+            throw new ResourceNotFoundException("Category not found");
         }
         categoryRepository.deleteById(id);
     }

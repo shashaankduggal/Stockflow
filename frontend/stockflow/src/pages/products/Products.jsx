@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { canAccess, normalizeRole } from "../../auth/access";
 import { getUser, request } from "../../services/api";
 
-const emptyForm = { name: "", sku: "", quantity: "", price: "" };
+const emptyForm = { name: "", sku: "", price: "" };
 
 const Products = () => {
   const [items, setItems] = useState([]);
@@ -33,12 +33,13 @@ const Products = () => {
   };
 
   useEffect(() => {
-    loadProducts();
+    const timer = window.setTimeout(loadProducts, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.name || !form.sku || !form.quantity || !form.price) {
+    if (!form.name || !form.sku || !form.price) {
       setError("Please fill in every product field.");
       return;
     }
@@ -51,7 +52,6 @@ const Products = () => {
       const payload = {
         name: form.name.trim(),
         sku: form.sku.trim(),
-        quantity: Number(form.quantity),
         price: Number(form.price),
       };
 
@@ -78,7 +78,6 @@ const Products = () => {
     setForm({
       name: product.name || "",
       sku: product.sku || "",
-      quantity: String(product.quantity ?? ""),
       price: String(product.price ?? ""),
     });
   };
@@ -126,27 +125,10 @@ const Products = () => {
               <span>SKU</span>
               <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
             </label>
-            <div className="product-form-split compact">
-              <label className="field">
-                <span>Quantity</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                />
-              </label>
-              <label className="field">
-                <span>Price</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                />
-              </label>
-            </div>
+            <label className="field">
+              <span>Price</span>
+              <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            </label>
             <div className="actions">
               <button className="button" disabled={saving}>
                 {saving ? "Saving..." : editingId ? "Update Product" : "Create Product"}

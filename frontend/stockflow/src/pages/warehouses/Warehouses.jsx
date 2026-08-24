@@ -29,7 +29,8 @@ const Warehouses = () => {
   };
 
   useEffect(() => {
-    loadWarehouses();
+    const timer = window.setTimeout(loadWarehouses, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const submit = async (event) => {

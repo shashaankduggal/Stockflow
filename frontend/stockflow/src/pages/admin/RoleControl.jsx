@@ -33,7 +33,8 @@ const RoleControl = () => {
   };
 
   useEffect(() => {
-    loadUsers();
+    const timer = window.setTimeout(loadUsers, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const updateRole = async (userId) => {

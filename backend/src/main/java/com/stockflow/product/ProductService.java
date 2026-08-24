@@ -1,5 +1,6 @@
 package com.stockflow.product;
 
+import com.stockflow.exception.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -36,11 +37,10 @@ public class ProductService {
     public Product updateProduct(Long id, Product updatedProduct) {
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         product.setName(updatedProduct.getName());
         product.setSku(updatedProduct.getSku());
-        product.setQuantity(updatedProduct.getQuantity());
         product.setPrice(updatedProduct.getPrice());
 
         return productRepository.save(product);
@@ -50,7 +50,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
 
         if (!productRepository.existsById(id)) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         productRepository.deleteById(id);
@@ -60,6 +60,6 @@ public class ProductService {
     public Product getProduct(Long id) {
 
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 }

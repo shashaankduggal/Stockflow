@@ -7,6 +7,7 @@ import com.stockflow.supplier.SupplierRepository;
 import com.stockflow.category.CategoryRepository;
 import com.stockflow.user.UserRepository;
 import com.stockflow.warehouse.WarehouseRepository;
+import com.stockflow.warehouse.WarehouseStockRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class DashboardService {
     private final InventoryRepository inventoryRepository;
     private final SupplierRepository supplierRepository;
     private final CategoryRepository categoryRepository;
+    private final WarehouseStockRepository warehouseStockRepository;
 
     public DashboardService(
             ProductRepository productRepository,
@@ -32,7 +34,8 @@ public class DashboardService {
             UserRepository userRepository,
             InventoryRepository inventoryRepository,
             SupplierRepository supplierRepository,
-            CategoryRepository categoryRepository) {
+            CategoryRepository categoryRepository,
+            WarehouseStockRepository warehouseStockRepository) {
 
         this.productRepository = productRepository;
         this.warehouseRepository = warehouseRepository;
@@ -40,6 +43,7 @@ public class DashboardService {
         this.inventoryRepository = inventoryRepository;
         this.supplierRepository = supplierRepository;
         this.categoryRepository = categoryRepository;
+        this.warehouseStockRepository = warehouseStockRepository;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
@@ -61,9 +65,9 @@ public class DashboardService {
         stats.put("recentTransactions", inventoryRepository.findTop10ByOrderByCreatedAtDesc());
         stats.put(
                 "inventoryValue",
-                productRepository.findAll()
+                warehouseStockRepository.findAll()
                         .stream()
-                        .map(product -> BigDecimal.valueOf(product.getPrice() * product.getQuantity()))
+                    .map(stock -> BigDecimal.valueOf(stock.getProduct().getPrice() * stock.getQuantity()))
                         .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         if (currentRole == RoleName.ADMIN || currentRole == RoleName.MANAGER) {
