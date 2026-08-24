@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { canAccess, normalizeRole } from "../../auth/access";
 import { getUser, request } from "../../services/api";
 
-const emptyForm = { name: "", sku: "", price: "" };
+const emptyForm = { name: "", sku: "", price: "", quantity: "" };
 
 const Products = () => {
   const [items, setItems] = useState([]);
@@ -39,7 +39,7 @@ const Products = () => {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.name || !form.sku || !form.price) {
+    if (!form.name || !form.sku || !form.price || (!editingId && !form.quantity)) {
       setError("Please fill in every product field.");
       return;
     }
@@ -59,6 +59,7 @@ const Products = () => {
         await request(`/products/${editingId}`, { method: "PUT", body: payload });
         setSuccess("Product updated successfully.");
       } else {
+        payload.quantity = Number(form.quantity);
         await request("/products", { method: "POST", body: payload });
         setSuccess("Product created successfully.");
       }
@@ -79,6 +80,7 @@ const Products = () => {
       name: product.name || "",
       sku: product.sku || "",
       price: String(product.price ?? ""),
+      quantity: String(product.quantity ?? ""),
     });
   };
 
@@ -128,6 +130,10 @@ const Products = () => {
             <label className="field">
               <span>Price</span>
               <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            </label>
+            <label className="field">
+              <span>Quantity</span>
+              <input type="number" min="0" step="1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
             </label>
             <div className="actions">
               <button className="button" disabled={saving}>
