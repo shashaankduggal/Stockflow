@@ -16,19 +16,19 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getProducts() {
+    public List<ProductResponse> getProducts() {
         return productService.getAllProducts();
     }
 
     @PostMapping
-    public Product createProduct(@Valid @RequestBody Product product) {
+    public ProductResponse createProduct(@Valid @RequestBody ProductRequest product) {
         return productService.createProduct(product);
     }
 
     @PutMapping("/{id}")
-    public Product updateProduct(
+    public ProductResponse updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody Product product) {
+            @Valid @RequestBody ProductRequest product) {
 
         return productService.updateProduct(id, product);
     }
@@ -42,13 +42,13 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Product getProduct(@PathVariable Long id) {
+    public ProductResponse getProduct(@PathVariable Long id) {
 
         return productService.getProduct(id);
     }
 
     @GetMapping("/search")
-    public List<Product> searchProducts(@RequestParam(required = false) String query) {
+    public List<ProductResponse> searchProducts(@RequestParam(required = false) String query) {
         return productService.searchProducts(query);
     }
 }

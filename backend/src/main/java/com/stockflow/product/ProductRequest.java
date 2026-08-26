@@ -1,48 +1,22 @@
 package com.stockflow.product;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "products")
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ProductRequest {
 
     @NotBlank(message = "Product name is required")
-    @Column(nullable = false)
     private String name;
 
     @NotBlank(message = "SKU is required")
-    @Column(unique = true)
     private String sku;
 
+    @NotNull(message = "Price is required")
     @Positive(message = "Price must be greater than zero")
-    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
-
-    public Product() {
-    }
-
-    public Product(Long id, String name, String sku, BigDecimal price) {
-        this.id = id;
-        this.name = name;
-        this.sku = sku;
-        this.price = price;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;

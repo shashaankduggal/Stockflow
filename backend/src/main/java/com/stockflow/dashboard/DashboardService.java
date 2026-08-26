@@ -1,6 +1,7 @@
 package com.stockflow.dashboard;
 
 import com.stockflow.inventory.InventoryRepository;
+import com.stockflow.inventory.InventoryType;
 import com.stockflow.product.ProductRepository;
 import com.stockflow.security.RoleName;
 import com.stockflow.supplier.SupplierRepository;
@@ -59,15 +60,15 @@ public class DashboardService {
         stats.put("totalProducts", productRepository.count());
         stats.put("totalWarehouses", warehouseRepository.count());
         stats.put("totalTransactions", inventoryRepository.count());
-        stats.put("stockInCount", inventoryRepository.countByType("STOCK_IN"));
-        stats.put("stockOutCount", inventoryRepository.countByType("STOCK_OUT"));
-        stats.put("transferCount", inventoryRepository.countByTypeIn(List.of("TRANSFER_IN", "TRANSFER_OUT")));
+        stats.put("stockInCount", inventoryRepository.countByType(InventoryType.STOCK_IN));
+        stats.put("stockOutCount", inventoryRepository.countByType(InventoryType.STOCK_OUT));
+        stats.put("transferCount", inventoryRepository.countByTypeIn(List.of(InventoryType.TRANSFER_IN, InventoryType.TRANSFER_OUT)));
         stats.put("recentTransactions", inventoryRepository.findTop10ByOrderByCreatedAtDesc());
         stats.put(
                 "inventoryValue",
                 warehouseStockRepository.findAll()
                         .stream()
-                    .map(stock -> BigDecimal.valueOf(stock.getProduct().getPrice() * stock.getQuantity()))
+                    .map(stock -> stock.getProduct().getPrice().multiply(BigDecimal.valueOf(stock.getQuantity())))
                         .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         if (currentRole == RoleName.ADMIN || currentRole == RoleName.MANAGER) {

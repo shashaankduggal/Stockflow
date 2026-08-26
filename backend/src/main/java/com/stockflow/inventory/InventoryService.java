@@ -54,18 +54,15 @@ public class InventoryService {
         WarehouseStock warehouseStock = getWarehouseStock(request.getProductId(), request.getWarehouseId());
         warehouseStock.setQuantity(warehouseStock.getQuantity() + request.getQuantity());
         warehouseStockRepository.saveAndFlush(warehouseStock);
-        auditLogService.logInventoryAction("STOCK_IN", warehouseStock.getProduct(), null,
+        auditLogService.logInventoryAction(InventoryType.STOCK_IN.name(), warehouseStock.getProduct(), null,
             warehouseStock.getWarehouse(), request.getQuantity(), request.getRemarks());
-
-        Inventory inventory = new Inventory();
-
-        inventory.setProduct(warehouseStock.getProduct());
-        inventory.setWarehouse(warehouseStock.getWarehouse());
-        inventory.setQuantity(request.getQuantity());
-        inventory.setType("STOCK_IN");
-        inventory.setRemarks(request.getRemarks());
-
-        return inventoryRepository.saveAndFlush(inventory);
+        return inventoryRepository.saveAndFlush(
+                createTransaction(
+                        warehouseStock.getProduct(),
+                        warehouseStock.getWarehouse(),
+                        request.getQuantity(),
+                        InventoryType.STOCK_IN,
+                        request.getRemarks()));
     }
 
     @Transactional
@@ -78,18 +75,15 @@ public class InventoryService {
 
         warehouseStock.setQuantity(warehouseStock.getQuantity() - request.getQuantity());
         warehouseStockRepository.saveAndFlush(warehouseStock);
-        auditLogService.logInventoryAction("STOCK_OUT", warehouseStock.getProduct(),
+        auditLogService.logInventoryAction(InventoryType.STOCK_OUT.name(), warehouseStock.getProduct(),
             warehouseStock.getWarehouse(), null, request.getQuantity(), request.getRemarks());
-
-        Inventory inventory = new Inventory();
-
-        inventory.setProduct(warehouseStock.getProduct());
-        inventory.setWarehouse(warehouseStock.getWarehouse());
-        inventory.setQuantity(request.getQuantity());
-        inventory.setType("STOCK_OUT");
-        inventory.setRemarks(request.getRemarks());
-
-        return inventoryRepository.saveAndFlush(inventory);
+        return inventoryRepository.saveAndFlush(
+                createTransaction(
+                        warehouseStock.getProduct(),
+                        warehouseStock.getWarehouse(),
+                        request.getQuantity(),
+                        InventoryType.STOCK_OUT,
+                        request.getRemarks()));
     }
 
     @Transactional
@@ -111,24 +105,25 @@ public class InventoryService {
         auditLogService.logInventoryAction("TRANSFER", sourceStock.getProduct(), sourceStock.getWarehouse(),
             destinationStock.getWarehouse(), request.getQuantity(), request.getRemarks());
 
-        Inventory outTransaction = new Inventory();
-        outTransaction.setProduct(sourceStock.getProduct());
-        outTransaction.setWarehouse(sourceStock.getWarehouse());
-        outTransaction.setQuantity(request.getQuantity());
-        outTransaction.setType("TRANSFER_OUT");
-        outTransaction.setRemarks(request.getRemarks());
-        inventoryRepository.saveAndFlush(outTransaction);
+        Inventory outTransaction = inventoryRepository.saveAndFlush(
+                createTransaction(
+                        sourceStock.getProduct(),
+                        sourceStock.getWarehouse(),
+                        request.getQuantity(),
+                        InventoryType.TRANSFER_OUT,
+                        request.getRemarks()));
 
-        Inventory inTransaction = new Inventory();
-        inTransaction.setProduct(destinationStock.getProduct());
-        inTransaction.setWarehouse(destinationStock.getWarehouse());
-        inTransaction.setQuantity(request.getQuantity());
-        inTransaction.setType("TRANSFER_IN");
-        inTransaction.setRemarks(request.getRemarks());
+        Inventory inTransaction = inventoryRepository.saveAndFlush(
+                createTransaction(
+                        destinationStock.getProduct(),
+                        destinationStock.getWarehouse(),
+                        request.getQuantity(),
+                        InventoryType.TRANSFER_IN,
+                        request.getRemarks()));
 
         return List.of(
                 outTransaction,
-                inventoryRepository.saveAndFlush(inTransaction));
+                inTransaction);
     }
 
     private WarehouseStock getWarehouseStock(Long productId, Long warehouseId) {
@@ -142,4 +137,19 @@ public class InventoryService {
                 });
     }
 
+    private Inventory createTransaction(
+            Product product,
+            Warehouse warehouse,
+            Integer quantity,
+            InventoryType type,
+            String remarks) {
+
+        Inventory inventory = new Inventory();
+        inventory.setProduct(product);
+        inventory.setWarehouse(warehouse);
+        inventory.setQuantity(quantity);
+        inventory.setType(type);
+        inventory.setRemarks(remarks);
+        return inventory;
+    }
 }

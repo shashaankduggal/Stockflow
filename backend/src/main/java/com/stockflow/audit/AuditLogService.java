@@ -47,7 +47,10 @@ public class AuditLogService {
     private String currentUserName() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
-            return user.getFullName();
+            return user.getEmail();
+        }
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
         }
         return "System";
     }
@@ -56,6 +59,9 @@ public class AuditLogService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
             return user.getEmail();
+        }
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
         }
         return "system@stockflow.local";
     }

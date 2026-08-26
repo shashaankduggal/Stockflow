@@ -1,49 +1,58 @@
 package com.stockflow.product;
 
 import com.stockflow.exception.ResourceNotFoundException;
+import com.stockflow.warehouse.WarehouseStockRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final WarehouseStockRepository warehouseStockRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, WarehouseStockRepository warehouseStockRepository) {
         this.productRepository = productRepository;
+        this.warehouseStockRepository = warehouseStockRepository;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductResponse> getAllProducts() {
+        return toResponses(productRepository.findAll());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
-    public List<Product> searchProducts(String query) {
+    public List<ProductResponse> searchProducts(String query) {
         if (query == null || query.isBlank()) {
             return getAllProducts();
         }
-        return productRepository.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCase(query, query);
+        return toResponses(productRepository.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCase(query, query));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Product createProduct(Product product) {
-        return productRepository.save(product);
+    public ProductResponse createProduct(ProductRequest request) {
+        return toResponse(productRepository.save(toProduct(new Product(), request)), Map.of());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Product updateProduct(Long id, Product updatedProduct) {
+    public ProductResponse updateProduct(Long id, ProductRequest request) {
 
         Product product = productRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        product.setName(updatedProduct.getName());
-        product.setSku(updatedProduct.getSku());
-        product.setPrice(updatedProduct.getPrice());
+        return toResponse(productRepository.save(toProduct(product, request)), currentStockByProductId());
+    }
 
-        return productRepository.save(product);
+    private Product toProduct(Product product, ProductRequest request) {
+        product.setName(request.getName().trim());
+        product.setSku(request.getSku().trim());
+        product.setPrice(request.getPrice().setScale(2, RoundingMode.HALF_UP));
+        return product;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -57,9 +66,35 @@ public class ProductService {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
-    public Product getProduct(Long id) {
+    public ProductResponse getProduct(Long id) {
 
-        return productRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        return toResponse(
+                productRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found")),
+                currentStockByProductId());
+    }
+
+    private List<ProductResponse> toResponses(List<Product> products) {
+        Map<Long, Integer> stockByProductId = currentStockByProductId();
+        return products.stream()
+                .map(product -> toResponse(product, stockByProductId))
+                .toList();
+    }
+
+    private ProductResponse toResponse(Product product, Map<Long, Integer> stockByProductId) {
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getSku(),
+                product.getPrice(),
+                stockByProductId.getOrDefault(product.getId(), 0));
+    }
+
+    private Map<Long, Integer> currentStockByProductId() {
+        Map<Long, Integer> stockByProductId = new HashMap<>();
+        for (Object[] row : warehouseStockRepository.findTotalQuantitiesByProductId()) {
+            stockByProductId.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        return stockByProductId;
     }
 }

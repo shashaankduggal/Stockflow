@@ -22,8 +22,9 @@ public class Inventory {
     @Column(nullable = false)
     private Integer quantity;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private InventoryType type;
 
     private String remarks;
 
@@ -41,7 +42,7 @@ public class Inventory {
     public Inventory(Long id,
             Product product,
             Integer quantity,
-            String type,
+            InventoryType type,
             String remarks,
             LocalDateTime createdAt) {
         this.id = id;
@@ -64,7 +65,7 @@ public class Inventory {
         return quantity;
     }
 
-    public String getType() {
+    public InventoryType getType() {
         return type;
     }
 
@@ -88,7 +89,7 @@ public class Inventory {
         this.quantity = quantity;
     }
 
-    public void setType(String type) {
+    public void setType(InventoryType type) {
         this.type = type;
     }
 

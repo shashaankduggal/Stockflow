@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
-    long countByType(String type);
+    long countByType(InventoryType type);
 
-    long countByTypeIn(Collection<String> types);
+    long countByTypeIn(Collection<InventoryType> types);
 
     List<Inventory> findTop10ByOrderByCreatedAtDesc();
 

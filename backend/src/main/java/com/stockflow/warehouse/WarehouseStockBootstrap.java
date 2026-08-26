@@ -30,14 +30,16 @@ public class WarehouseStockBootstrap implements CommandLineRunner {
         Map<String, WarehouseStock> seededStock = new LinkedHashMap<>();
 
         for (Inventory inventory : inventoryRepository.findAll()) {
-            if (inventory.getProduct() == null || inventory.getWarehouse() == null || inventory.getQuantity() == null) {
+            if (inventory.getProduct() == null
+                    || inventory.getWarehouse() == null
+                    || inventory.getQuantity() == null
+                    || inventory.getType() == null) {
                 continue;
             }
 
-            int delta = switch (String.valueOf(inventory.getType()).toUpperCase()) {
-                case "STOCK_IN", "TRANSFER_IN" -> inventory.getQuantity();
-                case "STOCK_OUT", "TRANSFER_OUT" -> -inventory.getQuantity();
-                default -> 0;
+            int delta = switch (inventory.getType()) {
+                case STOCK_IN, TRANSFER_IN -> inventory.getQuantity();
+                case STOCK_OUT, TRANSFER_OUT -> -inventory.getQuantity();
             };
 
             if (delta == 0) {
