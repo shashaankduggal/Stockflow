@@ -1,0 +1,118 @@
+{
+  "info": {
+    "_postman_id": "6f8e7c40-9ef4-4e7c-a1bb-5c8f6f5f1d21",
+    "name": "StockFlow API",
+    "description": "Postman requests for the StockFlow Spring Boot backend. Set baseUrl and token collection variables before testing protected endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "productId", "value": "1" },
+    { "key": "warehouseId", "value": "1" },
+    { "key": "fromWarehouseId", "value": "1" },
+    { "key": "toWarehouseId", "value": "2" },
+    { "key": "categoryId", "value": "1" },
+    { "key": "supplierId", "value": "1" },
+    { "key": "userId", "value": "2" },
+    { "key": "email", "value": "jane@example.com" },
+    { "key": "query", "value": "widget" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) {", "  pm.collectionVariables.set('token', pm.response.json().token);", "}"] } }]
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Jane Staff\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api", "auth", "signup"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) {", "  pm.collectionVariables.set('token', pm.response.json().token);", "}"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        { "name": "List products", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } } },
+        { "name": "Create product", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Widget\",\n  \"sku\": \"WID-001\",\n  \"price\": 12.50\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } } },
+        { "name": "Update product", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Widget\",\n  \"sku\": \"WID-001\",\n  \"price\": 14.95\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] } } },
+        { "name": "Delete product", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] } } },
+        { "name": "Get product", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] } } },
+        { "name": "Search products", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products/search?query={{query}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "search"], "query": [{ "key": "query", "value": "{{query}}" }] } } }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        { "name": "List inventory transactions", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/inventory", "host": ["{{baseUrl}}"], "path": ["api", "inventory"] } } },
+        { "name": "Stock in", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": 1,\n  \"warehouseId\": 1,\n  \"quantity\": 10,\n  \"remarks\": \"Initial stock\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/inventory/stock-in", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "stock-in"] } } },
+        { "name": "Stock out", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": 1,\n  \"warehouseId\": 1,\n  \"quantity\": 3,\n  \"remarks\": \"Customer order\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/inventory/stock-out", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "stock-out"] } } },
+        { "name": "Transfer stock", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": 1,\n  \"fromWarehouseId\": 1,\n  \"toWarehouseId\": 2,\n  \"quantity\": 5,\n  \"remarks\": \"Rebalancing\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/inventory/transfer", "host": ["{{baseUrl}}"], "path": ["api", "inventory", "transfer"] } } }
+      ]
+    },
+    {
+      "name": "Warehouses",
+      "item": [
+        { "name": "List warehouses", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/warehouses", "host": ["{{baseUrl}}"], "path": ["api", "warehouses"] } } },
+        { "name": "Create warehouse", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main\",\n  \"location\": \"New York\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/warehouses", "host": ["{{baseUrl}}"], "path": ["api", "warehouses"] } } },
+        { "name": "Get warehouse", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["api", "warehouses", "{{warehouseId}}"] } } },
+        { "name": "Update warehouse", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Updated\",\n  \"location\": \"Boston\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["api", "warehouses", "{{warehouseId}}"] } } },
+        { "name": "Delete warehouse", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/warehouses/{{warehouseId}}", "host": ["{{baseUrl}}"], "path": ["api", "warehouses", "{{warehouseId}}"] } } }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        { "name": "List suppliers", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/suppliers", "host": ["{{baseUrl}}"], "path": ["api", "suppliers"] } } },
+        { "name": "Create supplier", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Acme Supply\",\n  \"contactPerson\": \"Alex Doe\",\n  \"email\": \"alex@acme.example\",\n  \"phone\": \"555-0100\",\n  \"address\": \"1 Main St\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/suppliers", "host": ["{{baseUrl}}"], "path": ["api", "suppliers"] } } },
+        { "name": "Get supplier", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["api", "suppliers", "{{supplierId}}"] } } },
+        { "name": "Update supplier", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Acme Updated\",\n  \"contactPerson\": \"Alex Doe\",\n  \"email\": \"alex@acme.example\",\n  \"phone\": \"555-0101\",\n  \"address\": \"2 Main St\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["api", "suppliers", "{{supplierId}}"] } } },
+        { "name": "Delete supplier", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/suppliers/{{supplierId}}", "host": ["{{baseUrl}}"], "path": ["api", "suppliers", "{{supplierId}}"] } } }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "List categories", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] } } },
+        { "name": "Create category", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Hardware\",\n  \"description\": \"Hardware products\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] } } },
+        { "name": "Get category", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] } } },
+        { "name": "Update category", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Hardware\",\n  \"description\": \"Updated description\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] } } },
+        { "name": "Delete category", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] } } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Find user by email", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users/email/{{email}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "email", "{{email}}"] } } },
+        { "name": "List users", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] } } },
+        { "name": "Update user role", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"MANAGER\"\n}", "options": { "raw": { "language": "json" } } }, "url": { "raw": "{{baseUrl}}/api/users/{{userId}}/role", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}", "role"] } } },
+        { "name": "Delete user", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] } } }
+      ]
+    },
+    {
+      "name": "Dashboard and audit",
+      "item": [
+        { "name": "Dashboard statistics", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "dashboard"] } } },
+        { "name": "Audit logs", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/audit-logs", "host": ["{{baseUrl}}"], "path": ["api", "audit-logs"] } } }
+      ]
+    }
+  ]
+}

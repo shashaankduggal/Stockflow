@@ -26,7 +26,7 @@ public class InventoryController {
     }
 
     @PostMapping("/stock-out")
-    public Inventory stockOut(@Valid @RequestBody StockInRequest request) {
+    public Inventory stockOut(@Valid @RequestBody StockOutRequest request) {
         return inventoryService.stockOut(request);
     }
 

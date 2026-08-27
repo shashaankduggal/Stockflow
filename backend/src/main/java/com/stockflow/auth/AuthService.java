@@ -3,6 +3,7 @@ package com.stockflow.auth;
 import com.stockflow.role.Role;
 import com.stockflow.role.RoleRepository;
 import com.stockflow.exception.BadRequestException;
+import com.stockflow.exception.DuplicateResourceException;
 import com.stockflow.exception.UnauthorizedException;
 import com.stockflow.security.RoleName;
 import com.stockflow.user.User;
@@ -60,7 +61,7 @@ public class AuthService {
         String email = request.getEmail().trim().toLowerCase();
 
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new BadRequestException("An account with that email already exists");
+            throw new DuplicateResourceException("An account with that email already exists");
         }
 
         Role role = roleRepository.findByName(RoleName.VIEWER.authority())

@@ -1,8 +1,13 @@
 package com.stockflow.config;
 
 import com.stockflow.exception.BadRequestException;
+import com.stockflow.exception.DuplicateResourceException;
+import com.stockflow.exception.InsufficientStockException;
+import com.stockflow.exception.ProductNotFoundException;
 import com.stockflow.exception.ResourceNotFoundException;
 import com.stockflow.exception.UnauthorizedException;
+import com.stockflow.exception.WarehouseNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,40 +20,54 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<String> handleUnauthorized(UnauthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
     @ExceptionHandler({ BadRequestException.class, IllegalArgumentException.class })
-    public ResponseEntity<String> handleBadRequest(RuntimeException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException ex, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
+                                                                    HttpServletRequest request) {
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(message);
+        return error(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<String> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return ResponseEntity
-                .status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body("Method " + ex.getMethod() + " is not supported for this endpoint.");
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+                                                                  HttpServletRequest request) {
+        return error(HttpStatus.METHOD_NOT_ALLOWED,
+                "Method " + ex.getMethod() + " is not supported for this endpoint.", request);
+    }
+
+    @ExceptionHandler({ ProductNotFoundException.class, WarehouseNotFoundException.class,
+            ResourceNotFoundException.class })
+    public ResponseEntity<ErrorResponse> handleNotFoundExceptions(RuntimeException ex, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({ DuplicateResourceException.class })
+    public ResponseEntity<ErrorResponse> handleConflict(RuntimeException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex,
+                                                                  HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    private ResponseEntity<ErrorResponse> error(HttpStatus status, String message, HttpServletRequest request) {
+        return ResponseEntity.status(status).body(new ErrorResponse(
+                java.time.LocalDateTime.now(), status.value(), status.getReasonPhrase(), message, request.getRequestURI()));
     }
 }

@@ -1,5 +1,7 @@
 package com.stockflow.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stockflow.config.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,15 +18,18 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, ObjectMapper objectMapper) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -39,12 +44,16 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, exception) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"message\":\"Authentication required\"}");
+                            response.getWriter().write(objectMapper.writeValueAsString(new ErrorResponse(
+                                    LocalDateTime.now(), 401, "Unauthorized", "Authentication required",
+                                    request.getRequestURI())));
                         })
                         .accessDeniedHandler((request, response, exception) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"message\":\"Access denied\"}");
+                            response.getWriter().write(objectMapper.writeValueAsString(new ErrorResponse(
+                                    LocalDateTime.now(), 403, "Forbidden", "Access denied",
+                                    request.getRequestURI())));
                         }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/error").permitAll()

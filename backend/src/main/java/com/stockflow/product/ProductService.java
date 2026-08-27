@@ -1,24 +1,20 @@
 package com.stockflow.product;
 
-import com.stockflow.exception.ResourceNotFoundException;
-import com.stockflow.warehouse.WarehouseStockRepository;
+import com.stockflow.exception.DuplicateResourceException;
+import com.stockflow.exception.ProductNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final WarehouseStockRepository warehouseStockRepository;
 
-    public ProductService(ProductRepository productRepository, WarehouseStockRepository warehouseStockRepository) {
+    public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-        this.warehouseStockRepository = warehouseStockRepository;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
@@ -36,16 +32,19 @@ public class ProductService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ProductResponse createProduct(ProductRequest request) {
-        return toResponse(productRepository.save(toProduct(new Product(), request)), Map.of());
+        ensureSkuAvailable(request.getSku(), null);
+        return toResponse(productRepository.save(toProduct(new Product(), request)));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ProductResponse updateProduct(Long id, ProductRequest request) {
 
         Product product = productRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
-        return toResponse(productRepository.save(toProduct(product, request)), currentStockByProductId());
+        ensureSkuAvailable(request.getSku(), id);
+
+        return toResponse(productRepository.save(toProduct(product, request)));
     }
 
     private Product toProduct(Product product, ProductRequest request) {
@@ -59,7 +58,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
 
         if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
+            throw new ProductNotFoundException("Product not found");
         }
 
         productRepository.deleteById(id);
@@ -68,33 +67,29 @@ public class ProductService {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'VIEWER')")
     public ProductResponse getProduct(Long id) {
 
-        return toResponse(
-                productRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found")),
-                currentStockByProductId());
+        return toResponse(productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found")));
     }
 
     private List<ProductResponse> toResponses(List<Product> products) {
-        Map<Long, Integer> stockByProductId = currentStockByProductId();
         return products.stream()
-                .map(product -> toResponse(product, stockByProductId))
+                .map(this::toResponse)
                 .toList();
     }
 
-    private ProductResponse toResponse(Product product, Map<Long, Integer> stockByProductId) {
+    private ProductResponse toResponse(Product product) {
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getSku(),
-                product.getPrice(),
-                stockByProductId.getOrDefault(product.getId(), 0));
+                product.getPrice());
     }
 
-    private Map<Long, Integer> currentStockByProductId() {
-        Map<Long, Integer> stockByProductId = new HashMap<>();
-        for (Object[] row : warehouseStockRepository.findTotalQuantitiesByProductId()) {
-            stockByProductId.put((Long) row[0], ((Number) row[1]).intValue());
-        }
-        return stockByProductId;
+    private void ensureSkuAvailable(String sku, Long productId) {
+        productRepository.findBySkuIgnoreCase(sku.trim()).ifPresent(existing -> {
+            if (productId == null || !existing.getId().equals(productId)) {
+                throw new DuplicateResourceException("A product with that SKU already exists");
+            }
+        });
     }
 }
